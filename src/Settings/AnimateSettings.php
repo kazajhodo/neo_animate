@@ -157,24 +157,19 @@ class AnimateSettings extends SettingsBase {
     ];
 
     // $form[]['#markup'] = '<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>';
-
     // $form['animate1'] = [
     //   '#markup' => $this->t('Animate1'),
     // ];
     // $form[]['#markup'] = '<br><br><br><br><br><br><br><br><br>';
-
     // $form['animate2'] = [
     //   '#markup' => $this->t('Animate1'),
     // ];
-
     // $animation = new Animate();
     // // $animation->setAnimationFadeUp();
     // $animation->setMirror();
     // $animation->applyTo($form['animate1']);
     // $animation->applyTo($form['animate2']);
-
     // $form[]['#markup'] = '<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>';
-
     return $form;
   }
 
