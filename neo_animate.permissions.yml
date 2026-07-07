@@ -1,2 +1,3 @@
-administer neo_animate:
-  title: 'Administer Neo Animate'
+access neo_animate demo:
+  title: 'Access the Neo Animate playground'
+  description: 'View the animation playground and gallery at /admin/config/neo/animate.'

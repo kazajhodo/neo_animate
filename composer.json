@@ -1,6 +1,6 @@
 {
   "name": "jacerider/neo_animate",
-  "description": "An animation manager and library for Neo.",
+  "description": "Scroll-triggered viewport animations for Neo components: reveal, stagger, parallax, and exit animations.",
   "type": "drupal-module",
   "license": "proprietary",
   "homepage": "https://github.com/jacerider/neo_animate",

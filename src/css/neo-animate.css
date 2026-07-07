@@ -1,0 +1,19 @@
+/**
+ * Neo Animate.
+ *
+ * Elements queued for a viewport reveal are held invisible only when ALL of:
+ *  - html.neo-animate-ready is present (added by an inline head script from
+ *    neo_animate_page_attachments(); absent for no-JS visitors and for
+ *    prefers-reduced-motion users, so content is never lost),
+ *  - an enter animation is actually configured (a neo-animate-enter--* class),
+ *  - the driver JS has not yet armed the element (.neo-animate--animated).
+ *
+ * Opacity only — never display/visibility — so layout, anchor targets, and the
+ * Alchemist preview overlays are unaffected. The animation itself comes from
+ * the neo/animate catalog (.neo-animate--* keyframe classes), applied at the
+ * right moment by src/js/neo-animate.ts.
+ */
+html.neo-animate-ready [class*='neo-animate-enter--'].neo-animate:not(.neo-animate--animated),
+html.neo-animate-ready [class*='neo-animate-enter--'].neo-animate-stagger .neo-animate-item:not(.neo-animate--animated) {
+  opacity: 0;
+}

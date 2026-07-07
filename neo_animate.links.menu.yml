@@ -1,0 +1,5 @@
+neo_animate.demo:
+  title: 'Animate Playground'
+  description: 'Experiment with Neo Animate scroll animations — playground, gallery, stagger, and parallax.'
+  route_name: neo_animate.demo
+  parent: system.admin_config_neo

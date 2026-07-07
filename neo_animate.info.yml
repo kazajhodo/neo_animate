@@ -1,6 +1,6 @@
 name: Neo | Animate
 type: module
-description: 'An animation manager and library for Neo.'
+description: 'Scroll-triggered viewport animations for Neo components: reveal, stagger, parallax, and exit animations.'
 package: Neo
 version: 0.0.0
 core_version_requirement: ^10.3 || ^11

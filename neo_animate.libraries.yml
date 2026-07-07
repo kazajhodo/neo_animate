@@ -1,19 +1,30 @@
 animate:
   version: VERSION
-  neo: { group: contrib }
+  neo:
+    scope: front
+  css:
+    component:
+      src/css/neo-animate.css: {}
   js:
-    src/js/animate.ts: {}
+    src/js/neo-animate.ts: {}
   dependencies:
     - core/drupal
+    - core/once
     - core/drupalSettings
-    - neo_animate/library.aos
+    - neo/animate
 
-# Libraries
-
-library.aos:
-  version: 3.0.0-beta.6
+# Admin playground / gallery at /admin/config/neo/animate. A plain (non-neo)
+# library so it needs no build step and loads on the admin page as-is; it only
+# borrows the keyframes from neo/animate.
+demo:
+  version: VERSION
   css:
     theme:
-      dist/css/aos.css: {minified: true}
+      css/neo-animate-demo.css: {}
   js:
-    dist/js/aos.js: {minified: true}
+    js/neo-animate-demo.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupalSettings
+    - neo/animate

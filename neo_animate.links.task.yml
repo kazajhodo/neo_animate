@@ -1,4 +1,0 @@
-neo_animate.demo:
-  route_name: neo_animate.demo
-  base_route: neo.settings.plugin.neo_animate.config
-  title: 'Demo'

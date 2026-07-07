@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Primary module hooks for Neo Animate module.
+ * Scroll-triggered viewport animations for Neo components.
  */
 
 /**
@@ -11,7 +11,39 @@
 function neo_animate_theme() {
   return [
     'neo_animate_demo' => [
-      'render element' => 'element',
+      'variables' => [
+        'groups' => [],
+        'speeds' => [],
+        'delays' => [],
+      ],
     ],
   ];
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function neo_animate_page_attachments(array &$attachments) {
+  // Front-of-site only. The Alchemist editor UI is an admin route (skipped);
+  // its preview iframe routes are explicitly non-admin, so the library and
+  // the ready-class script reach the preview document too.
+  if (\Drupal::service('router.admin_context')->isAdminRoute()) {
+    return;
+  }
+  $attachments['#attached']['library'][] = 'neo_animate/animate';
+  // Pre-paint gate: elements queued for a reveal are only hidden beneath
+  // html.neo-animate-ready. The class is added by this inline script, so
+  // no-JS visitors and reduced-motion users never get hidden content, and
+  // there is no flash of hidden-then-shown markup on load.
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#value' => "if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('neo-animate-ready');}",
+    ],
+    'neo_animate_ready',
+  ];
+  // Inside the Alchemist preview iframe animations play immediately on load
+  // (demo mode) instead of waiting for viewport intersection.
+  $attachments['#attached']['drupalSettings']['neoAnimate']['preview'] =
+    function_exists('neo_alchemist_route_is_alchemist_preview') && neo_alchemist_route_is_alchemist_preview();
 }

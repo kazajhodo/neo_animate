@@ -1,9 +1,5 @@
 services:
   neo_animate.twig_extension:
     class: Drupal\neo_animate\TwigExtension
-    arguments: ['@renderer']
     tags:
-      - { name: twig.extension, priority: 100 }
-  neo_animate.settings:
-    parent: neo_settings.repository
-    arguments: ['neo_animate']
+      - { name: twig.extension }

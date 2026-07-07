@@ -1,7 +1,7 @@
 neo_animate.demo:
-  path: '/admin/config/neo/neo-animate/demo'
+  path: '/admin/config/neo/animate'
   defaults:
-    _title: 'Animate Demo'
-    _controller: '\Drupal\neo_animate\Controller\AnimateDemoController'
+    _controller: '\Drupal\neo_animate\Controller\AnimateDemoController::demo'
+    _title: 'Animate'
   requirements:
-    _permission: 'administer neo_animate'
+    _permission: 'access neo_animate demo'

@@ -1,0 +1,112 @@
+animate:
+  title: Animation
+  description: 'Reveal animation played when the component scrolls into view.'
+  type: style
+  examples: none
+  apply: true
+  styles:
+    none:
+      label: None
+      value: ''
+    fade:
+      label: 'Fade In'
+      value: 'neo-animate neo-animate-enter--fadeIn'
+    fade_up:
+      label: 'Fade Up'
+      value: 'neo-animate neo-animate-enter--fadeInUpSmall'
+    fade_down:
+      label: 'Fade Down'
+      value: 'neo-animate neo-animate-enter--fadeInDownSmall'
+    fade_left:
+      label: 'Fade From Left'
+      value: 'neo-animate neo-animate-enter--fadeInLeftSmall'
+    fade_right:
+      label: 'Fade From Right'
+      value: 'neo-animate neo-animate-enter--fadeInRightSmall'
+    zoom_in:
+      label: 'Zoom In'
+      value: 'neo-animate neo-animate-enter--zoomIn'
+    slide_up:
+      label: 'Slide Up'
+      value: 'neo-animate neo-animate-enter--slideInUp'
+    bounce_in:
+      label: 'Bounce In'
+      value: 'neo-animate neo-animate-enter--bounceIn'
+    flip_in:
+      label: 'Flip In'
+      value: 'neo-animate neo-animate-enter--flipInX'
+
+animate_speed:
+  title: 'Animation Speed'
+  description: 'How fast the reveal animation plays.'
+  type: style
+  examples: default
+  apply: true
+  styles:
+    fastest:
+      label: 'Fastest (0.17s)'
+      value: 'neo-animate--fastest'
+    faster:
+      label: 'Faster (0.25s)'
+      value: 'neo-animate--faster'
+    fast:
+      label: 'Fast (0.4s)'
+      value: 'neo-animate--fast'
+    default:
+      label: 'Default (0.5s)'
+      value: ''
+    slow:
+      label: 'Slow (0.9s)'
+      value: 'neo-animate--slow'
+    slower:
+      label: 'Slower (1s)'
+      value: 'neo-animate--slower'
+    slowest:
+      label: 'Slowest (1.5s)'
+      value: 'neo-animate--slowest'
+
+animate_delay:
+  title: 'Animation Delay'
+  description: 'Wait before the reveal animation starts.'
+  type: style
+  examples: none
+  apply: true
+  styles:
+    none:
+      label: None
+      value: ''
+    fastest:
+      label: 'Tiny (0.17s)'
+      value: 'neo-animate--delay-fastest'
+    faster:
+      label: 'Short (0.25s)'
+      value: 'neo-animate--delay-faster'
+    fast:
+      label: 'Medium (0.4s)'
+      value: 'neo-animate--delay-fast'
+    default:
+      label: 'Standard (0.5s)'
+      value: 'neo-animate--delay-default'
+    slow:
+      label: 'Long (0.9s)'
+      value: 'neo-animate--delay-slow'
+    slower:
+      label: 'Longer (1s)'
+      value: 'neo-animate--delay-slower'
+    slowest:
+      label: 'Longest (1.5s)'
+      value: 'neo-animate--delay-slowest'
+
+animate_stagger:
+  title: 'Animation Stagger'
+  description: "Cascade the reveal across the component's items. Only affects components built with staggerable items."
+  type: style
+  examples: none
+  apply: true
+  styles:
+    none:
+      label: 'Off'
+      value: ''
+    stagger:
+      label: 'On'
+      value: 'neo-animate-stagger'

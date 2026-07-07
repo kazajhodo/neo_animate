@@ -1,0 +1,248 @@
+/**
+ * Neo Animate playground / gallery (admin tool).
+ *
+ * Plain CSS (no Tailwind) so it renders correctly in the admin theme without a
+ * build step. The animations themselves come from the neo/animate catalog.
+ */
+
+.nad {
+  --nad-accent: #2d6df6;
+  --nad-border: #d3d8e0;
+  --nad-bg: #fff;
+  --nad-muted: #6b7280;
+  max-width: 1100px;
+}
+.nad-panel {
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.5rem 1.75rem;
+  background: var(--nad-bg);
+  border: 1px solid var(--nad-border);
+  border-radius: 10px;
+}
+.nad-h {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+.nad-desc {
+  margin: -0.5rem 0 1rem;
+  color: var(--nad-muted);
+  font-size: 0.9rem;
+}
+.nad-desc code,
+.nad-snippet code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ---- Playground ---- */
+.nad-play {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .nad-play { grid-template-columns: 1fr; }
+}
+.nad-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.nad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.nad-field select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--nad-border);
+  border-radius: 6px;
+  font-weight: 400;
+}
+.nad-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.nad-btn { align-self: flex-start; cursor: pointer; }
+
+.nad-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 1.5rem;
+  background:
+    linear-gradient(45deg, #f3f5f9 25%, transparent 25%) -10px 0,
+    linear-gradient(-45deg, #f3f5f9 25%, transparent 25%) -10px 0,
+    linear-gradient(45deg, transparent 75%, #f3f5f9 75%),
+    linear-gradient(-45deg, transparent 75%, #f3f5f9 75%);
+  background-size: 20px 20px;
+  background-color: #fbfcfe;
+  border: 1px dashed var(--nad-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.nad-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 220px;
+  height: 150px;
+  background: linear-gradient(135deg, var(--nad-accent), #7a3ff6);
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px -12px rgba(45, 109, 246, 0.6);
+  text-align: center;
+}
+.nad-preview-title { font-size: 1.1rem; font-weight: 700; }
+.nad-preview-sub { font-size: 0.7rem; opacity: 0.85; padding: 0 1rem; }
+
+/* ---- Output snippets ---- */
+.nad-output {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+.nad-snippet {
+  border: 1px solid var(--nad-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.nad-snippet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: #f6f8fb;
+  border-bottom: 1px solid var(--nad-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--nad-muted);
+}
+.nad-snippet code {
+  display: block;
+  padding: 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.nad-copy { cursor: pointer; }
+.nad-copy.is-copied { color: #12805c; }
+[data-nad-prop-row].is-hidden { display: none; }
+
+/* ---- Stagger ---- */
+.nad-stagger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.nad-stagger-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--nad-accent), #7a3ff6);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+/* ---- Parallax ---- */
+.nad-parallax {
+  height: 240px;
+  margin-top: 1rem;
+  overflow-y: auto;
+  border: 1px solid var(--nad-border);
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.nad-parallax-inner {
+  position: relative;
+  height: 900px;
+  background: repeating-linear-gradient(0deg, #f3f5f9 0 39px, #fff 39px 40px);
+}
+.nad-parallax-badge {
+  position: absolute;
+  top: 360px;
+  left: 50%;
+  margin-left: -60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, var(--nad-accent), #7a3ff6);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 50%;
+  box-shadow: 0 12px 30px -12px rgba(45, 109, 246, 0.6);
+  will-change: transform;
+}
+.nad-parallax-hint {
+  position: sticky;
+  top: 8px;
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--nad-muted);
+}
+
+/* ---- Gallery ---- */
+.nad-group {
+  margin: 1.25rem 0 0.6rem;
+  font-size: 0.95rem;
+  color: var(--nad-muted);
+}
+.nad-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+.nad-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.4rem;
+  background: #fbfcfe;
+  border: 1px solid var(--nad-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+}
+.nad-tile:hover { border-color: var(--nad-accent); }
+.nad-tile-box {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--nad-accent), #7a3ff6);
+  border-radius: 8px;
+}
+.nad-tile-label {
+  font-size: 0.68rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--nad-muted);
+  word-break: break-word;
+  text-align: center;
+}
+
+/* ---- Reduced-motion simulation: kill all catalog motion, keep visible ---- */
+.nad.nad-reduced .neo-animate--animated,
+.nad.nad-reduced .nad-parallax-badge {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}

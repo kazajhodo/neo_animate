@@ -1,187 +1,111 @@
-<div class="card p-6">
-  <div class="h-screen flex items-center justify-center">
-    <div class="text-center">
-      <h2 class="uppercase text-sm font-bold">Scroll Down</h2>
-      <div class="mt-3 animate-bounce">{{ icon('angle-down') }}</div>
-    </div>
-  </div>
-  <div class="min-h-screen">
-    <h2 class="font-bold text-xl border-t border-b py-3 text-center uppercase">Fade</h2>
-    <div class="flex flex-col gap-32 py-32">
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade', {duration: 1500}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade', {duration: 1500})"|raw }}</pre>
-        </div>
+{#
+/**
+ * @file
+ * Neo Animate playground / gallery.
+ *
+ * Available variables:
+ * - groups: catalog animations keyed by family, each [{name, label}].
+ * - speeds: speed option value => label.
+ * - delays: delay option value => label.
+ */
+#}
+<div class="nad" data-neo-animate-demo>
+
+  {# ---- Playground ---- #}
+  <section class="nad-panel">
+    <h2 class="nad-h">Playground</h2>
+    <div class="nad-play">
+      <div class="nad-controls">
+        <label class="nad-field">
+          <span>Animation</span>
+          <select data-nad="animation">
+            {% for group, items in groups %}
+              <optgroup label="{{ group }}">
+                {% for item in items %}
+                  <option value="{{ item.name }}"{% if item.name == 'fadeInUpSmall' %} selected{% endif %}>{{ item.label }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="nad-field">
+          <span>Speed</span>
+          <select data-nad="speed">
+            {% for value, label in speeds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="nad-field">
+          <span>Delay</span>
+          <select data-nad="delay">
+            {% for value, label in delays %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="nad-check"><input type="checkbox" data-nad="repeat"> Repeat on scroll</label>
+        <label class="nad-check"><input type="checkbox" data-nad="reduced"> Simulate reduced motion</label>
+        <button type="button" class="button button--primary nad-btn" data-nad-play>▶ Replay</button>
       </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-up', {mirror: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-up', {mirror: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-down', {once: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-down'), {once: true}"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-left') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-left')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-right') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-right')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-up-right') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-up-right')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-up-left') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-up-left')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-down-right') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-down-right')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('fade-down-left', {delay: 200}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('fade-down-left', {delay: 200})"|raw }}</pre>
+
+      <div class="nad-stage">
+        <div class="nad-preview" data-nad-preview>
+          <span class="nad-preview-title">Preview</span>
+          <span class="nad-preview-sub">the selected animation plays here</span>
         </div>
       </div>
     </div>
 
-    <h2 class="font-bold text-xl border-t border-b py-3 text-center uppercase">Flip</h2>
-    <div class="flex flex-col gap-32 py-32">
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('flip-up', {duration: 1500}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('flip-up', {duration: 1500})"|raw }}</pre>
-        </div>
+    <div class="nad-output">
+      <div class="nad-snippet">
+        <div class="nad-snippet-head"><span>Marker classes</span><button type="button" class="button button--small nad-copy" data-nad-copy="classes">Copy</button></div>
+        <code data-nad-out="classes"></code>
       </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('flip-down', {mirror: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('flip-down', {mirror: true})"|raw }}</pre>
-        </div>
+      <div class="nad-snippet">
+        <div class="nad-snippet-head"><span>Twig filter</span><button type="button" class="button button--small nad-copy" data-nad-copy="twig">Copy</button></div>
+        <code data-nad-out="twig"></code>
       </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('flip-right', {once: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('flip-right', {once: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('flip-left', {delay: 200}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('flip-left', {delay: 200})"|raw }}</pre>
-        </div>
+      <div class="nad-snippet" data-nad-prop-row>
+        <div class="nad-snippet-head"><span>Alchemist props</span><button type="button" class="button button--small nad-copy" data-nad-copy="prop">Copy</button></div>
+        <code data-nad-out="prop"></code>
       </div>
     </div>
+  </section>
 
-    <h2 class="font-bold text-xl border-t border-b py-3 text-center uppercase">Slide</h2>
-    <div class="flex flex-col gap-32 py-32">
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('slide-up', {duration: 1500}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('slide-up', {duration: 1500})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('slide-down', {mirror: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('slide-down', {mirror: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('slide-right', {once: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('slide-right', {once: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('slide-left', {delay: 200}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('slide-left', {delay: 200})"|raw }}</pre>
-        </div>
-      </div>
+  {# ---- Stagger ---- #}
+  <section class="nad-panel">
+    <h2 class="nad-h">Stagger</h2>
+    <p class="nad-desc">Items cascade in with an incremental delay — how <code>animate_stagger</code> / <code>neo-animate-item</code> behaves.</p>
+    <button type="button" class="button nad-btn" data-nad-stagger-play>▶ Play stagger</button>
+    <div class="nad-stagger" data-nad-stagger>
+      {% for i in 1..6 %}<div class="nad-stagger-item">{{ i }}</div>{% endfor %}
     </div>
+  </section>
 
-    <h2 class="font-bold text-xl border-t border-b py-3 text-center uppercase">Zoom</h2>
-    <div class="flex flex-col gap-32 py-32">
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-in', {duration: 1500}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-in', {duration: 1500})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-in-up', {mirror: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-in-up', {mirror: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-in-down', {once: true}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-in-down', {once: true})"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-in-left') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-in-left')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-in-right') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-in-right')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-out') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-out')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-out-up') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-out-up')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-out-down') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-out-down')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-start">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-out-left') %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-out-left')"|raw }}</pre>
-        </div>
-      </div>
-      <div class="self-end">
-        {% set attributes = create_attribute()|neo_animate_attribute('zoom-out-right', {delay: 200}) %}
-        <div{{ attributes.addClass('card border-8 bg-base-500 text-base-content px-6 py-12') }}>
-          <pre>{{ "neo_animate_attribute('zoom-out-right', {delay: 200})"|raw }}</pre>
-        </div>
+  {# ---- Parallax ---- #}
+  <section class="nad-panel">
+    <h2 class="nad-h">Parallax</h2>
+    <p class="nad-desc">Scroll inside the frame — the badge drifts at a fraction of scroll speed (<code>data-neo-parallax</code>).</p>
+    <div class="nad-parallax" data-nad-parallax-scroll>
+      <div class="nad-parallax-inner">
+        <div class="nad-parallax-badge" data-nad-parallax data-speed="0.35">parallax</div>
+        <span class="nad-parallax-hint">↕ scroll</span>
       </div>
     </div>
-  </div>
+  </section>
+
+  {# ---- Gallery ---- #}
+  <section class="nad-panel">
+    <h2 class="nad-h">Gallery</h2>
+    <p class="nad-desc">Every catalog animation — click a tile to replay it. Plays once as it scrolls into view.</p>
+    {% for group, items in groups %}
+      <h3 class="nad-group">{{ group }}</h3>
+      <div class="nad-gallery">
+        {% for item in items %}
+          <button type="button" class="nad-tile" data-nad-tile="{{ item.name }}">
+            <span class="nad-tile-box"></span>
+            <span class="nad-tile-label">{{ item.name }}</span>
+          </button>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </section>
+
 </div>
