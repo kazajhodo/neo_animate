@@ -22,7 +22,7 @@ and `prefers-reduced-motion` users always see content.
 | `neo-animate-enter--<catalogName>` | prop / dev | Which catalog animation plays on enter (e.g. `neo-animate-enter--fadeInUpSmall`) |
 | `neo-animate-exit--<catalogName>` | dev | Play this catalog animation on exit, then re-arm (implies repeat) |
 | `neo-animate-repeat` | dev | Re-arm on exit without an exit animation |
-| `neo-animate-stagger` | prop / dev | Cascade `.neo-animate-item` descendants (+100ms each; tune with `data-neo-animate-stagger="<ms>"`) |
+| `neo-animate-stagger` | prop / dev | Cascade `.neo-animate-item` descendants (+100ms each; tune with `data-neo-animate-stagger="<ms>"`). Items are observed independently and cascade as **they** enter the viewport — not when the root does — so a slow scroller always sees it |
 | `neo-animate-item` | dev, in twig | Marks a staggerable child |
 | `neo-animate--{fastest,faster,fast,slow,slower,slowest}` | prop / dev | Speed — catalog compound modifiers, inert until armed |
 | `neo-animate--delay-{fastest…slowest}` | prop / dev | Delay — same |

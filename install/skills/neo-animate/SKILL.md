@@ -34,9 +34,11 @@ Then `drush cr`. The chosen classes land on the component root via `apply: true`
 
 **Stagger** needs one twig addition: put `neo-animate-item` on the repeating
 element (the card/tile inside the `{% for %}`). With Stagger On, items cascade
-in at +100ms each (tune with `data-neo-animate-stagger="150"` on the root)
-instead of the root revealing as one block. Editors turning Stagger on without
-item markers is a harmless no-op.
+in at +100ms each (tune with `data-neo-animate-stagger="150"` on the root). The
+items are observed independently and cascade as **they** scroll into view — not
+when the component root does — so the cascade is visible even to a slow scroller
+(items crossing in the same frame, e.g. a horizontal row, form one batch).
+Editors turning Stagger on without item markers is a harmless no-op.
 
 ## Playground
 
