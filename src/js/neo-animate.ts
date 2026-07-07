@@ -10,9 +10,12 @@
  *  - `neo-animate-repeat`: re-arm on exit (silent reset while offscreen).
  *  - `neo-animate-exit--<name>`: play this catalog animation on exit, then
  *    re-arm (implies repeat).
- *  - `neo-animate-stagger` (+ children marked `neo-animate-item`): cascade the
- *    items with incremental delays (default 100ms; tune with
- *    data-neo-animate-stagger="<ms>").
+ *  - `neo-animate-stagger` (+ children marked `neo-animate-item`): the items are
+ *    observed independently and cascade with incremental delays (default 100ms;
+ *    tune with data-neo-animate-stagger="<ms>") as THEY enter the viewport — not
+ *    when the component root does — so a slow scroller always sees the cascade.
+ *    Items crossing in the same frame (e.g. a horizontal card row) form one
+ *    batch; items entering at separate scroll moments each start a fresh cascade.
  *  - Speed/delay come from the catalog's compound modifier classes
  *    (neo-animate--fast, neo-animate--delay-slow, ...), which are inert until
  *    the element is armed with neo-animate--animated.
@@ -148,9 +151,31 @@ import initParallax from './neo-parallax';
   // animationend cleanup, or it would clobber the fresh enter state.
   const pendingExit = new WeakMap<HTMLElement, () => void>();
 
+  // Arm a batch of stagger items with an incremental delay, first-to-last in
+  // DOM order. The animation to play is read from the root's enter class, so a
+  // stagger with no configured animation is a no-op.
+  const cascade = (root: HTMLElement, batch: HTMLElement[]): void => {
+    const enterName = nameFrom(root, ENTER_PREFIX);
+    if (!enterName || !batch.length) {
+      return;
+    }
+    const base = delayOf(root);
+    const step = parseInt(root.dataset.neoAnimateStagger || '', 10) || STAGGER_MS;
+    const mods = speedModsOf(root);
+    batch
+      .slice()
+      .sort((a, b) =>
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+      )
+      .forEach((item, i) => {
+        item.style.animationDelay = `${base + i * step}ms`;
+        arm(item, enterName, mods);
+      });
+  };
+
   const enter = (root: HTMLElement): void => {
     const enterName = nameFrom(root, ENTER_PREFIX);
-    if (!enterName) {
+    if (!enterName || !root.classList.contains('neo-animate')) {
       return;
     }
     const cancelExit = pendingExit.get(root);
@@ -160,30 +185,15 @@ import initParallax from './neo-parallax';
       // moment ago still restarts its animation.
       void root.offsetWidth;
     }
-    if (root.classList.contains('neo-animate')) {
-      arm(root, enterName);
-    }
-    if (root.classList.contains('neo-animate-stagger')) {
-      const base = delayOf(root);
-      const step = parseInt(root.dataset.neoAnimateStagger || '', 10) || STAGGER_MS;
-      const mods = speedModsOf(root);
-      items(root).forEach((item, i) => {
-        item.style.animationDelay = `${base + i * step}ms`;
-        arm(item, enterName, mods);
-      });
-    }
+    arm(root, enterName);
   };
 
   const leave = (root: HTMLElement): void => {
     const exitName = nameFrom(root, EXIT_PREFIX);
-    const resetAll = () => {
-      reset(root);
-      items(root).forEach(reset);
-    };
     if (!exitName || !root.classList.contains('neo-animate')) {
       // Repeat without an exit animation: the element is offscreen, so a
       // silent reset re-hides it (pre-hide CSS) with no visible jump.
-      resetAll();
+      reset(root);
       return;
     }
     // Swap the enter catalog class for the exit one. The style flush between
@@ -201,12 +211,13 @@ import initParallax from './neo-parallax';
     const cleanup = (): void => {
       root.removeEventListener('animationend', onEnd);
       pendingExit.delete(root);
-      resetAll();
+      reset(root);
     };
     pendingExit.set(root, cleanup);
     root.addEventListener('animationend', onEnd);
   };
 
+  // ---- Root reveal observer (each root's own enter animation) ----
   let observer: IntersectionObserver | null = null;
   const armed = new WeakSet<HTMLElement>();
 
@@ -238,6 +249,53 @@ import initParallax from './neo-parallax';
     return observer;
   };
 
+  // ---- Stagger item observer (items cascade on THEIR own entry) ----
+  let staggerObserver: IntersectionObserver | null = null;
+  const itemArmed = new WeakSet<HTMLElement>();
+
+  const getStaggerObserver = (): IntersectionObserver => {
+    if (!staggerObserver) {
+      staggerObserver = new IntersectionObserver(
+        (entries) => {
+          // Group the freshly-entering items by their stagger root; each group
+          // becomes one cascade batch (so a row that scrolls in together fans
+          // out, while items that enter at different scroll moments restart the
+          // cascade instead of inheriting a stale delay).
+          const batches = new Map<HTMLElement, HTMLElement[]>();
+          entries.forEach((entry) => {
+            const item = entry.target as HTMLElement;
+            const root = item.closest('.neo-animate-stagger') as HTMLElement | null;
+            if (!root) {
+              return;
+            }
+            if (entry.isIntersecting) {
+              if (itemArmed.has(item)) {
+                return;
+              }
+              itemArmed.add(item);
+              if (!batches.has(root)) {
+                batches.set(root, []);
+              }
+              (batches.get(root) as HTMLElement[]).push(item);
+              // Once by default: stop watching unless the root repeats.
+              if (!root.classList.contains('neo-animate-repeat')) {
+                (staggerObserver as IntersectionObserver).unobserve(item);
+              }
+            }
+            else if (itemArmed.has(item) && root.classList.contains('neo-animate-repeat')) {
+              // Repeat: reset offscreen so it re-cascades on the next entry.
+              itemArmed.delete(item);
+              reset(item);
+            }
+          });
+          batches.forEach((batch, root) => cascade(root, batch));
+        },
+        { threshold: THRESHOLD },
+      );
+    }
+    return staggerObserver;
+  };
+
   Drupal.behaviors.neoAnimate = {
     attach(context: HTMLElement) {
       once('neo-animate', '.neo-animate, .neo-animate-stagger', context).forEach((element) => {
@@ -247,14 +305,21 @@ import initParallax from './neo-parallax';
         if (reducedMotion()) {
           return;
         }
+        const staggerItems = root.classList.contains('neo-animate-stagger') ? items(root) : [];
         if (isPreview() || !('IntersectionObserver' in window)) {
           // Preview demo mode: play immediately on every iframe reload so the
           // editor sees each change fire. Exit/repeat never runs here.
           finishOnScreenshot();
           enter(root);
+          cascade(root, staggerItems);
           return;
         }
-        getObserver().observe(root);
+        // The root reveals itself when it enters; each stagger item cascades
+        // when it enters.
+        if (root.classList.contains('neo-animate')) {
+          getObserver().observe(root);
+        }
+        staggerItems.forEach((item) => getStaggerObserver().observe(item));
       });
       if (!reducedMotion()) {
         initParallax(once('neo-parallax', '[data-neo-parallax]', context) as HTMLElement[]);
