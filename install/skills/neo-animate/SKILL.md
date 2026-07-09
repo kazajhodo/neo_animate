@@ -30,7 +30,9 @@ animate_stagger:
 ```
 
 Then `drush cr`. The chosen classes land on the component root via `apply: true`
-— no twig changes for the root reveal.
+— no twig changes for the root reveal. **Exception:** if the root paints a
+background (`bg-default component-bg`), revealing it animates the whole colored
+block — reveal the content instead (see *Background components* below).
 
 **Stagger** needs one twig addition: put `neo-animate-item` on the repeating
 element (the card/tile inside the `{% for %}`). With Stagger On, items cascade
@@ -39,6 +41,54 @@ items are observed independently and cascade as **they** scroll into view — no
 when the component root does — so the cascade is visible even to a slow scroller
 (items crossing in the same frame, e.g. a horizontal row, form one batch).
 Editors turning Stagger on without item markers is a harmless no-op.
+
+## Background components: reveal the content, not the colored root
+
+`apply: true` lands the reveal on the component **root**. If that root paints a
+background (`bg-default component-bg`), the whole **colored block** animates in —
+almost never what you want. Reveal the *content* instead:
+
+1. In the `.component.yml`, override `apply: false` on `animate`, `animate_speed`,
+   `animate_delay` (a component's own prop keys win over the shared prop-def).
+2. In the twig, apply them to the inner content wrapper (the
+   `container-content py-component` div — add one if the component has none). The
+   three must sit **together on one element** (speed/delay are compound
+   `.neo-animate--animated.neo-animate--*` modifiers). `getValue()` returns the
+   raw key (`fade_up`), NOT the classes — so **merge the Attribute objects**:
+
+```twig
+<div {{ attributes.addClass(['bg-default', 'component-bg']) }}>   {# root: bg stays static #}
+  <div{{ animate.merge(animate_speed).merge(animate_delay).addClass(['container-content', 'py-component']) }}>
+    … content …
+  </div>
+</div>
+```
+
+`scheme`/`spacing` stay on the root (still `apply: true`) — the scheme must wrap
+the bg, and `--spacing-component` inherits down to the wrapper's `py-component`.
+
+### Stagger on a background component — keep the reveal and stagger together
+
+The per-item cascade has a hard requirement: **the enter class
+(`neo-animate-enter--*`) and `neo-animate-stagger` must be on the SAME element**
+(the stagger container), and that element must be an **ancestor of the
+`neo-animate-item` children**. The driver's `cascade()` reads the animation name
+from the stagger container, so a container with no enter class makes the cascade a
+**silent no-op** — and the item pre-hide rule
+(`[class*='neo-animate-enter--'].neo-animate-stagger .neo-animate-item`) won't fire
+either, so everything just appears at once. **Never split the reveal from the
+stagger** (e.g. reveal on the wrapper, `neo-animate-stagger` left on the root). When
+you move the reveal to the content wrapper, move `animate_stagger` there too
+(also `apply: false`) and merge it onto the same element:
+
+```twig
+<div{{ animate.merge(animate_speed).merge(animate_delay).merge(animate_stagger).addClass(['container-content', 'py-component']) }}>
+```
+
+The wrapper then block-reveals its own non-item content (heading, etc.) while the
+items cascade, and the background root never animates. (`neo-animate-stagger` alone
+does not animate the element it sits on — only `neo-animate` + an enter class does
+the block reveal, so it's the enter class that must travel with the stagger.)
 
 ## Playground
 
@@ -107,3 +157,7 @@ Catalog names: `fadeIn`, `fadeInUpSmall`, `fadeInDownSmall`, `fadeInLeftSmall`,
   classes; `drush cr` after prop-def or component.yml edits.
 - Parallax + reveal on the same element: the reveal's fill-mode transform
   overrides the parallax inline transform. Wrap instead.
+- **Reveal on a background component animates the colored block** — reveal an inner
+  content wrapper instead (`apply: false` + merge onto the wrapper). And keep the
+  enter class and `neo-animate-stagger` on the **same** element, or the cascade
+  silently no-ops. See *Background components*.
