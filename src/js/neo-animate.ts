@@ -217,83 +217,134 @@ import initParallax from './neo-parallax';
     root.addEventListener('animationend', onEnd);
   };
 
+  // Reveal is watched two ways at once, and whichever fires first wins. Neither
+  // rule covers the whole range on its own:
+  //
+  // - RATIO (`threshold`) asks "is 12% of the ELEMENT on screen?". It cannot be
+  //   satisfied by anything taller than ~8x the viewport — a 14,000px wrapper in
+  //   a 1,000px viewport tops out near 7% — so a long page stays blank forever.
+  // - EDGE (negative bottom `rootMargin`) asks "has the top risen 12% of the
+  //   VIEWPORT past the fold?", which any height can satisfy. But an element in
+  //   the last 12% of viewport height at the document bottom can never reach the
+  //   line, because there is no scroll left to give.
+  //
+  // Each rule's blind spot is the other's easy case, so both observers watch
+  // every element; `armed` makes the second fire a no-op. This also avoids
+  // classifying by height at attach time, which a resize or rotate would
+  // invalidate.
+  const EDGE_MARGIN = `0px 0px -${Math.round(THRESHOLD * 100)}% 0px`;
+
   // ---- Root reveal observer (each root's own enter animation) ----
   let observer: IntersectionObserver | null = null;
+  let edgeObserver: IntersectionObserver | null = null;
   const armed = new WeakSet<HTMLElement>();
+
+  // One callback serves both observers; drop out of both when done.
+  const onReveal: IntersectionObserverCallback = (entries) => {
+    entries.forEach((entry) => {
+      const root = entry.target as HTMLElement;
+      if (entry.isIntersecting) {
+        if (!armed.has(root)) {
+          armed.add(root);
+          enter(root);
+          // Once by default: stop watching unless exit/repeat re-arms.
+          if (!nameFrom(root, EXIT_PREFIX) && !root.classList.contains('neo-animate-repeat')) {
+            observer?.unobserve(root);
+            edgeObserver?.unobserve(root);
+          }
+        }
+      }
+      // Only the ratio observer is allowed to retract a reveal: the edge
+      // observer reports "not intersecting" for everything below its trigger
+      // line, which would tear down an element that is plainly on screen.
+      else if (armed.has(root) && entry.intersectionRatio === 0) {
+        armed.delete(root);
+        leave(root);
+      }
+    });
+  };
 
   const getObserver = (): IntersectionObserver => {
     if (!observer) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            const root = entry.target as HTMLElement;
-            if (entry.isIntersecting) {
-              if (!armed.has(root)) {
-                armed.add(root);
-                enter(root);
-                // Once by default: stop watching unless exit/repeat re-arms.
-                if (!nameFrom(root, EXIT_PREFIX) && !root.classList.contains('neo-animate-repeat')) {
-                  (observer as IntersectionObserver).unobserve(root);
-                }
-              }
-            }
-            else if (armed.has(root)) {
-              armed.delete(root);
-              leave(root);
-            }
-          });
-        },
-        { threshold: THRESHOLD },
-      );
+      observer = new IntersectionObserver(onReveal, { threshold: THRESHOLD });
     }
     return observer;
   };
 
+  const getEdgeObserver = (): IntersectionObserver => {
+    if (!edgeObserver) {
+      edgeObserver = new IntersectionObserver(onReveal, { threshold: 0, rootMargin: EDGE_MARGIN });
+    }
+    return edgeObserver;
+  };
+
+  const observeRoot = (el: HTMLElement): void => {
+    getObserver().observe(el);
+    getEdgeObserver().observe(el);
+  };
+
   // ---- Stagger item observer (items cascade on THEIR own entry) ----
   let staggerObserver: IntersectionObserver | null = null;
+  let edgeStaggerObserver: IntersectionObserver | null = null;
   const itemArmed = new WeakSet<HTMLElement>();
+
+  // A stagger item hits both blind spots too — a report section running to
+  // several thousand pixels, or a short final item at the document bottom — so
+  // it is watched the same two ways.
+  const onStagger: IntersectionObserverCallback = (entries) => {
+    // Group the freshly-entering items by their stagger root; each group
+    // becomes one cascade batch (so a row that scrolls in together fans
+    // out, while items that enter at different scroll moments restart the
+    // cascade instead of inheriting a stale delay).
+    const batches = new Map<HTMLElement, HTMLElement[]>();
+    entries.forEach((entry) => {
+      const item = entry.target as HTMLElement;
+      const root = item.closest('.neo-animate-stagger') as HTMLElement | null;
+      if (!root) {
+        return;
+      }
+      if (entry.isIntersecting) {
+        if (itemArmed.has(item)) {
+          return;
+        }
+        itemArmed.add(item);
+        if (!batches.has(root)) {
+          batches.set(root, []);
+        }
+        (batches.get(root) as HTMLElement[]).push(item);
+        // Once by default: stop watching unless the root repeats.
+        if (!root.classList.contains('neo-animate-repeat')) {
+          staggerObserver?.unobserve(item);
+          edgeStaggerObserver?.unobserve(item);
+        }
+      }
+      // As above, only a genuine exit (ratio 0) resets a repeating item.
+      else if (itemArmed.has(item) && entry.intersectionRatio === 0 && root.classList.contains('neo-animate-repeat')) {
+        // Repeat: reset offscreen so it re-cascades on the next entry.
+        itemArmed.delete(item);
+        reset(item);
+      }
+    });
+    batches.forEach((batch, root) => cascade(root, batch));
+  };
 
   const getStaggerObserver = (): IntersectionObserver => {
     if (!staggerObserver) {
-      staggerObserver = new IntersectionObserver(
-        (entries) => {
-          // Group the freshly-entering items by their stagger root; each group
-          // becomes one cascade batch (so a row that scrolls in together fans
-          // out, while items that enter at different scroll moments restart the
-          // cascade instead of inheriting a stale delay).
-          const batches = new Map<HTMLElement, HTMLElement[]>();
-          entries.forEach((entry) => {
-            const item = entry.target as HTMLElement;
-            const root = item.closest('.neo-animate-stagger') as HTMLElement | null;
-            if (!root) {
-              return;
-            }
-            if (entry.isIntersecting) {
-              if (itemArmed.has(item)) {
-                return;
-              }
-              itemArmed.add(item);
-              if (!batches.has(root)) {
-                batches.set(root, []);
-              }
-              (batches.get(root) as HTMLElement[]).push(item);
-              // Once by default: stop watching unless the root repeats.
-              if (!root.classList.contains('neo-animate-repeat')) {
-                (staggerObserver as IntersectionObserver).unobserve(item);
-              }
-            }
-            else if (itemArmed.has(item) && root.classList.contains('neo-animate-repeat')) {
-              // Repeat: reset offscreen so it re-cascades on the next entry.
-              itemArmed.delete(item);
-              reset(item);
-            }
-          });
-          batches.forEach((batch, root) => cascade(root, batch));
-        },
-        { threshold: THRESHOLD },
-      );
+      staggerObserver = new IntersectionObserver(onStagger, { threshold: THRESHOLD });
     }
     return staggerObserver;
+  };
+
+  const getEdgeStaggerObserver = (): IntersectionObserver => {
+    if (!edgeStaggerObserver) {
+      edgeStaggerObserver = new IntersectionObserver(onStagger, { threshold: 0, rootMargin: EDGE_MARGIN });
+    }
+    return edgeStaggerObserver;
+  };
+
+  const observeItem = (el: HTMLElement): void => {
+    getStaggerObserver().observe(el);
+    getEdgeStaggerObserver().observe(el);
   };
 
   Drupal.behaviors.neoAnimate = {
@@ -317,9 +368,9 @@ import initParallax from './neo-parallax';
         // The root reveals itself when it enters; each stagger item cascades
         // when it enters.
         if (root.classList.contains('neo-animate')) {
-          getObserver().observe(root);
+          observeRoot(root);
         }
-        staggerItems.forEach((item) => getStaggerObserver().observe(item));
+        staggerItems.forEach((item) => observeItem(item));
       });
       if (!reducedMotion()) {
         initParallax(once('neo-parallax', '[data-neo-parallax]', context) as HTMLElement[]);
