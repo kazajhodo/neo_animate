@@ -239,8 +239,19 @@ import initParallax from './neo-parallax';
   let edgeObserver: IntersectionObserver | null = null;
   const armed = new WeakSet<HTMLElement>();
 
-  // One callback serves both observers; drop out of both when done.
-  const onReveal: IntersectionObserverCallback = (entries) => {
+  // Both observers share this handler, but only the ratio one may retract —
+  // an entry carries no handle on the observer that produced it, so which is
+  // which has to be passed in at construction.
+  //
+  // The edge observer's root is shrunk by EDGE_MARGIN, so it reports
+  // `intersectionRatio: 0` for everything below its trigger line — the bottom
+  // 12% of the viewport, which is plainly on screen. Letting it retract means
+  // an element arming there is entered by the ratio observer and torn down by
+  // the edge observer moments later, and since arming unobserves BOTH, nothing
+  // is left watching: it never reveals again, on scroll or otherwise. The
+  // symptom is one component invisible for good, and which component depends
+  // on the viewport height that decides who lands in the band.
+  const handleReveal = (entries: IntersectionObserverEntry[], mayRetract: boolean): void => {
     entries.forEach((entry) => {
       const root = entry.target as HTMLElement;
       if (entry.isIntersecting) {
@@ -254,10 +265,7 @@ import initParallax from './neo-parallax';
           }
         }
       }
-      // Only the ratio observer is allowed to retract a reveal: the edge
-      // observer reports "not intersecting" for everything below its trigger
-      // line, which would tear down an element that is plainly on screen.
-      else if (armed.has(root) && entry.intersectionRatio === 0) {
+      else if (mayRetract && armed.has(root) && entry.intersectionRatio === 0) {
         armed.delete(root);
         leave(root);
       }
@@ -266,14 +274,14 @@ import initParallax from './neo-parallax';
 
   const getObserver = (): IntersectionObserver => {
     if (!observer) {
-      observer = new IntersectionObserver(onReveal, { threshold: THRESHOLD });
+      observer = new IntersectionObserver((entries) => handleReveal(entries, true), { threshold: THRESHOLD });
     }
     return observer;
   };
 
   const getEdgeObserver = (): IntersectionObserver => {
     if (!edgeObserver) {
-      edgeObserver = new IntersectionObserver(onReveal, { threshold: 0, rootMargin: EDGE_MARGIN });
+      edgeObserver = new IntersectionObserver((entries) => handleReveal(entries, false), { threshold: 0, rootMargin: EDGE_MARGIN });
     }
     return edgeObserver;
   };
@@ -291,7 +299,12 @@ import initParallax from './neo-parallax';
   // A stagger item hits both blind spots too — a report section running to
   // several thousand pixels, or a short final item at the document bottom — so
   // it is watched the same two ways.
-  const onStagger: IntersectionObserverCallback = (entries) => {
+  // `mayReset` splits the pair the same way the root observers are split: a
+  // repeating item is deliberately left observed, so an edge observer with
+  // reset rights re-fires on it for every frame it spends in the excluded
+  // band, re-cascading an item that is on screen. That reads as a flicker
+  // rather than as a cascade.
+  const handleStagger = (entries: IntersectionObserverEntry[], mayReset: boolean): void => {
     // Group the freshly-entering items by their stagger root; each group
     // becomes one cascade batch (so a row that scrolls in together fans
     // out, while items that enter at different scroll moments restart the
@@ -319,7 +332,7 @@ import initParallax from './neo-parallax';
         }
       }
       // As above, only a genuine exit (ratio 0) resets a repeating item.
-      else if (itemArmed.has(item) && entry.intersectionRatio === 0 && root.classList.contains('neo-animate-repeat')) {
+      else if (mayReset && itemArmed.has(item) && entry.intersectionRatio === 0 && root.classList.contains('neo-animate-repeat')) {
         // Repeat: reset offscreen so it re-cascades on the next entry.
         itemArmed.delete(item);
         reset(item);
@@ -330,14 +343,14 @@ import initParallax from './neo-parallax';
 
   const getStaggerObserver = (): IntersectionObserver => {
     if (!staggerObserver) {
-      staggerObserver = new IntersectionObserver(onStagger, { threshold: THRESHOLD });
+      staggerObserver = new IntersectionObserver((entries) => handleStagger(entries, true), { threshold: THRESHOLD });
     }
     return staggerObserver;
   };
 
   const getEdgeStaggerObserver = (): IntersectionObserver => {
     if (!edgeStaggerObserver) {
-      edgeStaggerObserver = new IntersectionObserver(onStagger, { threshold: 0, rootMargin: EDGE_MARGIN });
+      edgeStaggerObserver = new IntersectionObserver((entries) => handleStagger(entries, false), { threshold: 0, rootMargin: EDGE_MARGIN });
     }
     return edgeStaggerObserver;
   };
