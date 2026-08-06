@@ -51,21 +51,22 @@ almost never what you want. Reveal the *content* instead:
 1. In the `.component.yml`, override `apply: false` on `animate`, `animate_speed`,
    `animate_delay` (a component's own prop keys win over the shared prop-def).
 2. In the twig, apply them to the inner content wrapper (the
-   `container-content py-component` div — add one if the component has none). The
+   `container-content` div — add one if the component has none). The
    three must sit **together on one element** (speed/delay are compound
    `.neo-animate--animated.neo-animate--*` modifiers). `getValue()` returns the
    raw key (`fade_up`), NOT the classes — so **merge the Attribute objects**:
 
 ```twig
 <div {{ attributes.addClass(['bg-default', 'component-bg']) }}>   {# root: bg stays static #}
-  <div{{ animate.merge(animate_speed).merge(animate_delay).addClass(['container-content', 'py-component']) }}>
+  <div{{ animate.merge(animate_speed).merge(animate_delay).addClass(['container-content']) }}>
     … content …
   </div>
 </div>
 ```
 
-`scheme`/`spacing` stay on the root (still `apply: true`) — the scheme must wrap
-the bg, and `--spacing-component` inherits down to the wrapper's `py-component`.
+`scheme`/`spacing`/`gap` stay on the root (still `apply: true`) — the scheme must
+wrap the bg, and the `gap` prop's `py-component` padding belongs on the root so
+the background fills it while only the content reveals.
 
 ### Stagger on a background component — keep the reveal and stagger together
 
@@ -82,7 +83,7 @@ you move the reveal to the content wrapper, move `animate_stagger` there too
 (also `apply: false`) and merge it onto the same element:
 
 ```twig
-<div{{ animate.merge(animate_speed).merge(animate_delay).merge(animate_stagger).addClass(['container-content', 'py-component']) }}>
+<div{{ animate.merge(animate_speed).merge(animate_delay).merge(animate_stagger).addClass(['container-content']) }}>
 ```
 
 The wrapper then block-reveals its own non-item content (heading, etc.) while the
