@@ -20,6 +20,11 @@
  *    (neo-animate--fast, neo-animate--delay-slow, ...), which are inert until
  *    the element is armed with neo-animate--animated.
  *  - `data-neo-parallax="<speed>"`: rAF parallax (see neo-parallax.ts).
+ *  - `html.neo-animate-hold`: while present, nothing is observed and nothing
+ *    reveals. Put it on <html> while a splash, consent gate or intro covers the
+ *    page and remove it when that clears — otherwise every above-the-fold
+ *    reveal fires behind the cover and is over before the visitor sees it,
+ *    because IntersectionObserver cannot tell that something is on top.
  *
  * Only this driver ever writes `neo-animate--animated` and raw catalog classes.
  * The pre-hide state lives in src/css/neo-animate.css behind the
@@ -291,6 +296,56 @@ import initParallax from './neo-parallax';
     getEdgeObserver().observe(el);
   };
 
+  // ---- Hold (park reveals while something covers the page) ----
+  // A site adds `neo-animate-hold` to <html> while a splash, consent gate or
+  // intro covers the page, and removes it when that clears. IntersectionObserver
+  // knows nothing about occlusion: an overlay does not change what intersects,
+  // so without this every above-the-fold reveal fires behind the cover and is
+  // over before the visitor sees the page. Absent by default, so a site that
+  // never sets it behaves exactly as before.
+  // IntersectionObserver v2 (`trackVisibility`) would detect the cover natively
+  // but is Chromium-only, so it would leave Firefox and Safari wrong.
+  // The hold lasts exactly as long as the class does: whatever sets it owns
+  // removing it. There is no timeout — a site that holds for a long intro is
+  // doing so deliberately, and expiring underneath it would be the bug.
+  const HOLD_CLASS = 'neo-animate-hold';
+
+  const isHeld = (): boolean =>
+    document.documentElement.classList.contains(HOLD_CLASS);
+
+  // Roots and items parked while the hold is on, observed in attach order once
+  // it lifts.
+  const heldRoots: HTMLElement[] = [];
+  const heldItems: HTMLElement[] = [];
+  let holdWatcher: MutationObserver | null = null;
+
+  const release = (): void => {
+    holdWatcher?.disconnect();
+    holdWatcher = null;
+    // Drained with splice: attach() can run again while these are being
+    // observed (an AJAX load in the same tick), and re-queueing would double up.
+    heldRoots.splice(0).forEach((el) => observeRoot(el));
+    heldItems.splice(0).forEach((el) => observeItem(el));
+  };
+
+  // Watches the class rather than exposing a release() function: a class on
+  // <html> can be set from an inline head script before first paint, and needs
+  // no load-order agreement between the overlay and this driver.
+  const watchHold = (): void => {
+    if (holdWatcher) {
+      return;
+    }
+    holdWatcher = new MutationObserver(() => {
+      if (!isHeld()) {
+        release();
+      }
+    });
+    holdWatcher.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  };
+
   // ---- Stagger item observer (items cascade on THEIR own entry) ----
   let staggerObserver: IntersectionObserver | null = null;
   let edgeStaggerObserver: IntersectionObserver | null = null;
@@ -376,6 +431,17 @@ import initParallax from './neo-parallax';
           finishOnScreenshot();
           enter(root);
           cascade(root, staggerItems);
+          return;
+        }
+        // Held: park instead of observing, and pick these up when the hold
+        // lifts. Deliberately after the preview and no-IntersectionObserver
+        // branches, so neither can be stalled by a stray hold class.
+        if (isHeld()) {
+          if (root.classList.contains('neo-animate')) {
+            heldRoots.push(root);
+          }
+          staggerItems.forEach((item) => heldItems.push(item));
+          watchHold();
           return;
         }
         // The root reveals itself when it enters; each stagger item cascades

@@ -147,6 +147,38 @@ Catalog names: `fadeIn`, `fadeInUpSmall`, `fadeInDownSmall`, `fadeInLeftSmall`,
 - A typo'd catalog name still un-hides the element (the `--animated` marker
   alone releases the pre-hide) — content is never lost.
 
+## Holding animations behind a splash or consent gate
+
+Put `neo-animate-hold` on `<html>` while anything covers the page, and take it
+off when that clears:
+
+```js
+document.documentElement.classList.add('neo-animate-hold');   // cover goes up
+document.documentElement.classList.remove('neo-animate-hold'); // cover comes down
+```
+
+While it is present nothing is observed, so nothing reveals; the moment it comes
+off, everything queued starts watching the viewport as normal.
+
+**Why you need it.** `IntersectionObserver` knows nothing about occlusion. A
+splash or cookie banner painted over the page does not change what intersects,
+so every above-the-fold reveal fires — correctly, behind the cover — and is
+finished before the visitor ever sees the page. The animations are not broken,
+they are just spent, and nothing on screen suggests anything went wrong.
+
+**Whatever sets the hold owns removing it.** There is no timeout — a hold lasts
+exactly as long as the class does, so a release that never runs leaves content
+hidden behind the pre-hide CSS.
+
+**Set it before first paint**, from the same inline head script that decides
+whether the cover shows. Adding it from a behaviour is a race: this driver may
+already have attached and observed.
+
+**Not IntersectionObserver v2.** Its `trackVisibility` / `isVisible` genuinely
+accounts for being covered, but it is Chromium-only — Firefox and Safari
+visitors would keep the bug, which is worse than not having the feature because
+it would only be wrong for some people.
+
 ## Pitfalls
 
 - **Don't write catalog classes statically** — markers only (see table).
